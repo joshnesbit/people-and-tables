@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>people and tables</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Caveat', cursive;
+    background: #faf9f6;
+    color: #222;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .controls {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    padding: 1.5rem 1rem 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .slider-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .slider-group label {
+    font-size: 1.4rem;
+  }
+
+  .slider-group input[type="range"] {
+    width: 200px;
+    accent-color: #222;
+    cursor: pointer;
+  }
+
+  .slider-group .range-labels {
+    display: flex;
+    justify-content: space-between;
+    width: 200px;
+    font-size: 1.05rem;
+    color: #888;
+  }
+
+  .print-btn {
+    font-family: 'Caveat', cursive;
+    font-size: 1.3rem;
+    background: none;
+    border: 2px solid #222;
+    border-radius: 6px;
+    padding: 0.4rem 1.2rem;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .print-btn:hover {
+    background: #222;
+    color: #faf9f6;
+  }
+
+  .graphic-wrap {
+    max-width: 720px;
+    margin: 1rem auto;
+    padding: 0 1rem;
+    width: 100%;
+  }
+
+  .graphic {
+    position: relative;
+    width: 100%;
+    line-height: 0;
+  }
+
+  .graphic img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* Hotspots — positioned as % of the image */
+  .hotspot {
+    position: absolute;
+    cursor: pointer;
+    transition: opacity 0.35s, background 0.2s;
+    border-radius: 4px;
+  }
+
+  .hotspot:hover {
+    background: rgba(34, 34, 34, 0.04);
+    box-shadow: 0 0 0 2px rgba(34, 34, 34, 0.5);
+  }
+
+  .hotspot.dimmed {
+    pointer-events: none;
+  }
+
+  .hotspot-tooltip {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #222;
+    color: #faf9f6;
+    font-size: 1.05rem;
+    line-height: 1.2;
+    padding: 0.35rem 0.7rem;
+    border-radius: 5px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    z-index: 5;
+  }
+
+  .hotspot:hover .hotspot-tooltip {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .hotspot-tooltip .meta {
+    font-size: 0.85rem;
+    color: #aaa;
+  }
+
+  .hotspot-tooltip button {
+    font-family: 'Caveat', cursive;
+    font-size: 1rem;
+    background: #faf9f6;
+    color: #222;
+    border: none;
+    border-radius: 4px;
+    padding: 0.15rem 0.55rem;
+    cursor: pointer;
+  }
+
+  .hotspot-tooltip button:hover {
+    background: #fff;
+  }
+
+  /* Card overlay (covers card with fade when filtered out) */
+  .hotspot-cover {
+    position: absolute;
+    inset: 0;
+    background: rgba(250, 249, 246, 0.92);
+    border-radius: 4px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s;
+  }
+
+  .hotspot.dimmed .hotspot-cover {
+    opacity: 1;
+  }
+
+  .form-section {
+    max-width: 600px;
+    margin: 1.5rem auto 2rem;
+    padding: 0 2rem;
+    text-align: center;
+  }
+
+  .form-section h2 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .form-section p {
+    font-size: 1.3rem;
+    color: #666;
+    margin-bottom: 1rem;
+  }
+
+  .form-section form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  .form-section input,
+  .form-section textarea {
+    font-family: 'Caveat', cursive;
+    font-size: 1.2rem;
+    border: 2px solid #ccc;
+    border-radius: 6px;
+    padding: 0.6rem 0.8rem;
+    background: #fff;
+    transition: border-color 0.2s;
+  }
+
+  .form-section input:focus,
+  .form-section textarea:focus {
+    outline: none;
+    border-color: #222;
+  }
+
+  .form-section textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  .form-section button[type="submit"] {
+    font-family: 'Caveat', cursive;
+    font-size: 1.4rem;
+    background: #222;
+    color: #faf9f6;
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem 1.5rem;
+    cursor: pointer;
+    align-self: center;
+    transition: background 0.2s;
+  }
+
+  .form-section button[type="submit"]:hover {
+    background: #555;
+  }
+
+  .form-success {
+    font-size: 1.4rem;
+    color: #2a7;
+    display: none;
+    padding: 1rem;
+  }
+
+  footer {
+    text-align: center;
+    padding: 2rem 1rem;
+    font-size: 1.4rem;
+    color: #888;
+    margin-top: auto;
+  }
+
+  footer .heart {
+    color: #c44;
+  }
+
+  @media print {
+    .controls, .form-section, footer, .print-btn, .hotspot-tooltip { display: none !important; }
+    body { background: #fff; }
+    .graphic-wrap { max-width: 100%; padding: 0; }
+    .hotspot.dimmed .hotspot-cover { opacity: 1; background: #fff; }
+    .hotspot { box-shadow: none !important; }
+  }
+
+  @media (max-width: 600px) {
+    .controls { gap: 1.5rem; }
+    .hotspot-tooltip { font-size: 0.85rem; padding: 0.25rem 0.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="controls">
+  <div class="slider-group">
+    <label>tables</label>
+    <input type="range" id="tableSlider" min="0" max="10" value="10">
+    <div class="range-labels"><span>fewer</span><span>more</span></div>
+  </div>
+  <div class="slider-group">
+    <label>people</label>
+    <input type="range" id="peopleSlider" min="0" max="20" value="20">
+    <div class="range-labels"><span>fewer</span><span>more</span></div>
+  </div>
+  <button class="print-btn" onclick="window.print()">print this</button>
+</div>
+
+<div class="graphic-wrap">
+  <div class="graphic" id="graphic">
+    <img src="people%20and%20tables.png" alt="tables and people configurations" id="graphicImg">
+    <!-- Hotspots are injected by JS -->
+  </div>
+</div>
+
+<section class="form-section">
+  <h2>got an idea?</h2>
+  <p>what's your people + tables combo?</p>
+  <form id="ideaForm">
+    <input type="text" name="name" placeholder="your name (optional)">
+    <input type="text" name="title" placeholder="give it a name (e.g. 'the campfire')" required>
+    <textarea name="description" placeholder="describe it — how many tables? how are people arranged? what's it for?" required></textarea>
+    <button type="submit">share it</button>
+  </form>
+  <div class="form-success" id="formSuccess">thanks! your idea has been added to the pile.</div>
+</section>
+
+<footer>
+  made by a relational technologist <span class="heart">♥</span>
+</footer>
+
+<script>
+// Hotspot positions as percentages of the full graphic image.
+// Image layout: title row at top (~7%), then 5 rows × 2 columns of cards.
+// Tweak these if needed — top/left/width/height in % of image.
+const cards = [
+  // Card boundaries derived from pixel-level border detection of the source image.
+  // Columns: left 3.63–48.79% (w 45.16), right 51.01–96.47% (w 45.46)
+  // Rows: 1 [6.14–26.09], 2 [27.34–45.90], 3 [47.16–64.53], 4 [65.79–81.77], 5 [82.96–98.41]
+  { id: 1,  name: "block party",     tables: 3,  people: 10, top: 6.14,  left: 3.63,  width: 45.16, height: 19.95 },
+  { id: 2,  name: "longest table",   tables: 6,  people: 20, top: 6.14,  left: 51.01, width: 45.46, height: 19.95 },
+  { id: 3,  name: "activity fair",   tables: 8,  people: 14, top: 27.34, left: 3.63,  width: 45.16, height: 18.56 },
+  { id: 4,  name: "small potluck",   tables: 2,  people: 10, top: 27.34, left: 51.01, width: 45.46, height: 18.56 },
+  { id: 5,  name: "farmer's market", tables: 6,  people: 12, top: 47.16, left: 3.63,  width: 45.16, height: 17.37 },
+  { id: 6,  name: "fix-it fair",     tables: 3,  people: 6,  top: 47.16, left: 51.01, width: 45.46, height: 17.37 },
+  { id: 7,  name: "halloween",       tables: 7,  people: 9,  top: 65.79, left: 3.63,  width: 45.16, height: 15.98 },
+  { id: 8,  name: "dance party",     tables: 1,  people: 9,  top: 65.79, left: 51.01, width: 45.46, height: 15.98 },
+  { id: 9,  name: "dinner party",    tables: 1,  people: 7,  top: 82.96, left: 3.63,  width: 45.16, height: 15.45 },
+  { id: 10, name: "mutual aid",      tables: 3,  people: 14, top: 82.96, left: 51.01, width: 45.46, height: 15.45 }
+];
+
+const graphic = document.getElementById('graphic');
+const img = document.getElementById('graphicImg');
+
+function buildHotspots() {
+  cards.forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'hotspot';
+    el.dataset.id = c.id;
+    el.style.top = c.top + '%';
+    el.style.left = c.left + '%';
+    el.style.width = c.width + '%';
+    el.style.height = c.height + '%';
+
+    const cover = document.createElement('div');
+    cover.className = 'hotspot-cover';
+    el.appendChild(cover);
+
+    const tip = document.createElement('div');
+    tip.className = 'hotspot-tooltip';
+    tip.innerHTML = `<span>${c.name} <span class="meta">(${c.tables}t · ${c.people}p)</span></span>`;
+    const btn = document.createElement('button');
+    btn.textContent = 'download';
+    btn.onclick = (e) => { e.stopPropagation(); downloadCard(c); };
+    tip.appendChild(btn);
+    el.appendChild(tip);
+
+    graphic.appendChild(el);
+  });
+}
+
+function applyFilters() {
+  const tMax = parseInt(document.getElementById('tableSlider').value);
+  const pMax = parseInt(document.getElementById('peopleSlider').value);
+  cards.forEach(c => {
+    const el = graphic.querySelector(`.hotspot[data-id="${c.id}"]`);
+    const matches = c.tables <= tMax && c.people <= pMax;
+    el.classList.toggle('dimmed', !matches);
+  });
+}
+
+async function downloadCard(card) {
+  // Crop the image region for this card and download as PNG
+  const naturalW = img.naturalWidth;
+  const naturalH = img.naturalHeight;
+  const sx = (card.left / 100) * naturalW;
+  const sy = (card.top / 100) * naturalH;
+  const sw = (card.width / 100) * naturalW;
+  const sh = (card.height / 100) * naturalH;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = sw;
+  canvas.height = sh;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, sw, sh);
+  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+
+  canvas.toBlob((blob) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${card.name.replace(/[^a-z0-9]+/gi, '-')}.png`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, 'image/png');
+}
+
+document.getElementById('tableSlider').addEventListener('input', applyFilters);
+document.getElementById('peopleSlider').addEventListener('input', applyFilters);
+
+document.getElementById('ideaForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const form = e.target;
+  console.log('Idea submitted:', Object.fromEntries(new FormData(form)));
+  form.style.display = 'none';
+  document.getElementById('formSuccess').style.display = 'block';
+  setTimeout(() => {
+    form.style.display = 'flex';
+    form.reset();
+    document.getElementById('formSuccess').style.display = 'none';
+  }, 3000);
+});
+
+buildHotspots();
+applyFilters();
+</script>
+
+</body>
+</html>
