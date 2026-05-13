@@ -6,11 +6,21 @@ Filter by table count and people count with the sliders, hover any card to downl
 
 ## Run locally
 
-It's a single static HTML file. Just open `index.html` in a browser, or serve the folder:
+The page is a single static HTML file — just open `index.html` in a browser, or serve the folder:
 
 ```bash
 python3 -m http.server 8091
 ```
+
+The form posts to a Vercel serverless function at `/api/submit-idea`; to test that locally use `vercel dev`.
+
+## Deployment
+
+Deployed on Vercel. The submission endpoint requires one environment variable:
+
+- `RESEND_API_KEY` — a [Resend](https://resend.com) API key with permission to send from `notifications@relationaltechproject.org`.
+
+The sending domain must be DNS-verified in Resend.
 
 ## License
 

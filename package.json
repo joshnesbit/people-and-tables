@@ -1,0 +1,7 @@
+{
+  "name": "people-and-tables",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Interactive exploration of people + tables configurations for gatherings."
+}

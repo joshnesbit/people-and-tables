@@ -235,6 +235,18 @@
     padding: 1rem;
   }
 
+  .form-error {
+    font-size: 1.2rem;
+    color: #c44;
+    display: none;
+    padding: 0.5rem;
+  }
+
+  .form-section button[type="submit"]:disabled {
+    opacity: 0.5;
+    cursor: wait;
+  }
+
   footer {
     text-align: center;
     padding: 2rem 1rem;
@@ -321,11 +333,14 @@
   <p>what's your people + tables combo?</p>
   <form id="ideaForm">
     <input type="text" name="name" placeholder="your name (optional)">
-    <input type="text" name="title" placeholder="name your combo" required>
-    <textarea name="description" placeholder="how many tables? how are people arranged?" required></textarea>
-    <button type="submit">share it</button>
+    <input type="text" name="title" placeholder="name your combo" required maxlength="200">
+    <textarea name="description" placeholder="how many tables? how are people arranged?" required maxlength="2000"></textarea>
+    <!-- honeypot — bots fill this, humans don't see it -->
+    <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;">
+    <button type="submit" id="submitBtn">share it</button>
   </form>
   <div class="form-success" id="formSuccess">thanks! your idea has been added to the pile.</div>
+  <div class="form-error" id="formError"></div>
 </section>
 
 <footer>
@@ -422,17 +437,47 @@ async function downloadCard(card) {
 document.getElementById('tableSlider').addEventListener('input', applyFilters);
 document.getElementById('peopleSlider').addEventListener('input', applyFilters);
 
-document.getElementById('ideaForm').addEventListener('submit', (e) => {
+document.getElementById('ideaForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const form = e.target;
-  console.log('Idea submitted:', Object.fromEntries(new FormData(form)));
-  form.style.display = 'none';
-  document.getElementById('formSuccess').style.display = 'block';
-  setTimeout(() => {
-    form.style.display = 'flex';
-    form.reset();
-    document.getElementById('formSuccess').style.display = 'none';
-  }, 3000);
+  const btn = document.getElementById('submitBtn');
+  const successEl = document.getElementById('formSuccess');
+  const errorEl = document.getElementById('formError');
+
+  errorEl.style.display = 'none';
+  errorEl.textContent = '';
+  btn.disabled = true;
+  btn.textContent = 'sending...';
+
+  const payload = Object.fromEntries(new FormData(form));
+
+  try {
+    const resp = await fetch('/api/submit-idea', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await resp.json().catch(() => ({}));
+
+    if (!resp.ok) {
+      throw new Error(data.error || 'something went wrong');
+    }
+
+    form.style.display = 'none';
+    successEl.style.display = 'block';
+    setTimeout(() => {
+      form.style.display = 'flex';
+      form.reset();
+      successEl.style.display = 'none';
+      btn.disabled = false;
+      btn.textContent = 'share it';
+    }, 4000);
+  } catch (err) {
+    errorEl.textContent = err.message || 'something went wrong — please try again';
+    errorEl.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'share it';
+  }
 });
 
 buildHotspots();
