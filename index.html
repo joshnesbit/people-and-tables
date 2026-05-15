@@ -107,6 +107,10 @@
     line-height: 0;
   }
 
+  .graphic + .graphic {
+    margin-top: 1.25rem;
+  }
+
   .graphic img {
     width: 100%;
     height: auto;
@@ -292,31 +296,38 @@
 
   @media print {
     .controls, .form-section, footer, .print-btn, .hotspot-tooltip { display: none !important; }
-    html, body { background: #fff; height: 100%; margin: 0; padding: 0; }
+    html, body { background: #fff; margin: 0; padding: 0; }
     body { display: block; }
     .graphic-wrap {
       max-width: 100%;
       width: 100%;
-      height: 100vh;
       padding: 0;
       margin: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
     .graphic {
       width: auto;
-      height: 100%;
       max-width: 100%;
       max-height: 100vh;
-      display: inline-block;
-      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      page-break-after: always;
+      break-after: page;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    .graphic:last-child {
+      page-break-after: auto;
+      break-after: auto;
+    }
+    .graphic + .graphic {
+      margin-top: 0;
     }
     .graphic img {
       width: auto;
-      height: 100%;
       max-width: 100%;
       max-height: 100vh;
+      height: auto;
       object-fit: contain;
       display: block;
     }
@@ -341,15 +352,19 @@
   </div>
   <div class="slider-group">
     <label>people</label>
-    <input type="range" id="peopleSlider" min="0" max="20" value="20">
+    <input type="range" id="peopleSlider" min="0" max="25" value="25">
     <div class="range-labels"><span>fewer</span><span>more</span></div>
   </div>
   <button class="print-btn" onclick="window.print()">print this</button>
 </div>
 
 <div class="graphic-wrap">
-  <div class="graphic" id="graphic">
-    <img src="people%20and%20tables.png" alt="tables and people configurations" id="graphicImg">
+  <div class="graphic" data-graphic="main">
+    <img src="people%20and%20tables.png" alt="tables and people configurations">
+    <!-- Hotspots are injected by JS -->
+  </div>
+  <div class="graphic" data-graphic="additions">
+    <img src="additions.png" alt="more tables and people configurations contributed by community">
     <!-- Hotspots are injected by JS -->
   </div>
 </div>
@@ -374,67 +389,92 @@
 </footer>
 
 <script>
-// Hotspot positions as percentages of the full graphic image.
-// Image layout: title row at top (~7%), then 5 rows × 2 columns of cards.
-// Tweak these if needed — top/left/width/height in % of image.
-const cards = [
-  // Card boundaries derived from pixel-level border detection of the source image.
-  // Columns: left 3.63–48.79% (w 45.16), right 51.01–96.47% (w 45.46)
-  // Rows: 1 [6.14–26.09], 2 [27.34–45.90], 3 [47.16–64.53], 4 [65.79–81.77], 5 [82.96–98.41]
-  { id: 1,  name: "block party",     tables: 3,  people: 10, top: 6.14,  left: 3.63,  width: 45.16, height: 19.95 },
-  { id: 2,  name: "longest table",   tables: 6,  people: 20, top: 6.14,  left: 51.01, width: 45.46, height: 19.95 },
-  { id: 3,  name: "activity fair",   tables: 8,  people: 14, top: 27.34, left: 3.63,  width: 45.16, height: 18.56 },
-  { id: 4,  name: "small potluck",   tables: 2,  people: 10, top: 27.34, left: 51.01, width: 45.46, height: 18.56 },
-  { id: 5,  name: "farmer's market", tables: 6,  people: 12, top: 47.16, left: 3.63,  width: 45.16, height: 17.37 },
-  { id: 6,  name: "fix-it fair",     tables: 3,  people: 6,  top: 47.16, left: 51.01, width: 45.46, height: 17.37 },
-  { id: 7,  name: "halloween",       tables: 7,  people: 9,  top: 65.79, left: 3.63,  width: 45.16, height: 15.98 },
-  { id: 8,  name: "dance party",     tables: 1,  people: 9,  top: 65.79, left: 51.01, width: 45.46, height: 15.98 },
-  { id: 9,  name: "dinner party",    tables: 1,  people: 7,  top: 82.96, left: 3.63,  width: 45.16, height: 15.45 },
-  { id: 10, name: "mutual aid",      tables: 3,  people: 14, top: 82.96, left: 51.01, width: 45.46, height: 15.45 }
+// Each graphic is a separate source image with its own card grid.
+// Hotspot top/left/width/height are percentages of that image.
+const graphics = [
+  {
+    key: 'main',
+    // Card boundaries derived from pixel-level border detection of the source image.
+    // Columns: left 3.63–48.79% (w 45.16), right 51.01–96.47% (w 45.46)
+    // Rows: 1 [6.14–26.09], 2 [27.34–45.90], 3 [47.16–64.53], 4 [65.79–81.77], 5 [82.96–98.41]
+    cards: [
+      { id: 1,  name: "block party",     tables: 3,  people: 10, top: 6.14,  left: 3.63,  width: 45.16, height: 19.95 },
+      { id: 2,  name: "longest table",   tables: 6,  people: 20, top: 6.14,  left: 51.01, width: 45.46, height: 19.95 },
+      { id: 3,  name: "activity fair",   tables: 8,  people: 14, top: 27.34, left: 3.63,  width: 45.16, height: 18.56 },
+      { id: 4,  name: "small potluck",   tables: 2,  people: 10, top: 27.34, left: 51.01, width: 45.46, height: 18.56 },
+      { id: 5,  name: "farmer's market", tables: 6,  people: 12, top: 47.16, left: 3.63,  width: 45.16, height: 17.37 },
+      { id: 6,  name: "fix-it fair",     tables: 3,  people: 6,  top: 47.16, left: 51.01, width: 45.46, height: 17.37 },
+      { id: 7,  name: "halloween",       tables: 7,  people: 9,  top: 65.79, left: 3.63,  width: 45.16, height: 15.98 },
+      { id: 8,  name: "dance party",     tables: 1,  people: 9,  top: 65.79, left: 51.01, width: 45.46, height: 15.98 },
+      { id: 9,  name: "dinner party",    tables: 1,  people: 7,  top: 82.96, left: 3.63,  width: 45.16, height: 15.45 },
+      { id: 10, name: "mutual aid",      tables: 3,  people: 14, top: 82.96, left: 51.01, width: 45.46, height: 15.45 }
+    ]
+  },
+  {
+    key: 'additions',
+    // Card boundaries derived from border detection of additions.png (trimmed; tagline removed).
+    // Columns: left 2.35–48.57% (w 46.22), right 50.78–96.79% (w 46.01)
+    // Rows: 1 [9.61–51.84] (h 42.23), 2 [55.73–97.77] (h 42.04)
+    cards: [
+      { id: 11, name: "citizen's assembly", idea: "David",   tables: 6, people: 22, top: 9.61,  left: 2.35,  width: 46.22, height: 42.23 },
+      { id: 12, name: "ping pong game",     idea: "Sam",     tables: 1, people: 2,  top: 9.61,  left: 50.78, width: 46.01, height: 42.23 },
+      { id: 13, name: "reflection circle",  idea: "David",   tables: 0, people: 12, top: 55.73, left: 2.35,  width: 46.22, height: 42.04 },
+      { id: 14, name: "lunch 'n learn",     idea: "Nerissa", tables: 3, people: 10, top: 55.73, left: 50.78, width: 46.01, height: 42.04 }
+    ]
+  }
 ];
 
-const graphic = document.getElementById('graphic');
-const img = document.getElementById('graphicImg');
+// Resolve graphic DOM elements and attach references
+graphics.forEach(g => {
+  g.el = document.querySelector(`.graphic[data-graphic="${g.key}"]`);
+  g.img = g.el.querySelector('img');
+});
 
 function buildHotspots() {
-  cards.forEach(c => {
-    const el = document.createElement('div');
-    el.className = 'hotspot';
-    el.dataset.id = c.id;
-    el.style.top = c.top + '%';
-    el.style.left = c.left + '%';
-    el.style.width = c.width + '%';
-    el.style.height = c.height + '%';
+  graphics.forEach(g => {
+    g.cards.forEach(c => {
+      const el = document.createElement('div');
+      el.className = 'hotspot';
+      el.dataset.id = c.id;
+      el.style.top = c.top + '%';
+      el.style.left = c.left + '%';
+      el.style.width = c.width + '%';
+      el.style.height = c.height + '%';
 
-    const cover = document.createElement('div');
-    cover.className = 'hotspot-cover';
-    el.appendChild(cover);
+      const cover = document.createElement('div');
+      cover.className = 'hotspot-cover';
+      el.appendChild(cover);
 
-    const tip = document.createElement('div');
-    tip.className = 'hotspot-tooltip';
-    tip.innerHTML = `<span>${c.name} <span class="meta">(${c.tables}t · ${c.people}p)</span></span>`;
-    const btn = document.createElement('button');
-    btn.textContent = 'download';
-    btn.onclick = (e) => { e.stopPropagation(); downloadCard(c); };
-    tip.appendChild(btn);
-    el.appendChild(tip);
+      const tip = document.createElement('div');
+      tip.className = 'hotspot-tooltip';
+      const credit = c.idea ? `<span class="meta"> · idea by ${c.idea}</span>` : '';
+      tip.innerHTML = `<span>${c.name}${credit} <span class="meta">(${c.tables}t · ${c.people}p)</span></span>`;
+      const btn = document.createElement('button');
+      btn.textContent = 'download';
+      btn.onclick = (e) => { e.stopPropagation(); downloadCard(g, c); };
+      tip.appendChild(btn);
+      el.appendChild(tip);
 
-    graphic.appendChild(el);
+      g.el.appendChild(el);
+    });
   });
 }
 
 function applyFilters() {
   const tMax = parseInt(document.getElementById('tableSlider').value);
   const pMax = parseInt(document.getElementById('peopleSlider').value);
-  cards.forEach(c => {
-    const el = graphic.querySelector(`.hotspot[data-id="${c.id}"]`);
-    const matches = c.tables <= tMax && c.people <= pMax;
-    el.classList.toggle('dimmed', !matches);
+  graphics.forEach(g => {
+    g.cards.forEach(c => {
+      const el = g.el.querySelector(`.hotspot[data-id="${c.id}"]`);
+      const matches = c.tables <= tMax && c.people <= pMax;
+      el.classList.toggle('dimmed', !matches);
+    });
   });
 }
 
-async function downloadCard(card) {
-  // Crop the image region for this card and download as PNG
+async function downloadCard(g, card) {
+  // Crop the source image region for this card and download as PNG
+  const img = g.img;
   const naturalW = img.naturalWidth;
   const naturalH = img.naturalHeight;
   const sx = (card.left / 100) * naturalW;
