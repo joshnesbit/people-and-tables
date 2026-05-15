@@ -108,7 +108,7 @@
   }
 
   .graphic + .graphic {
-    margin-top: 1.25rem;
+    margin-top: 0;
   }
 
   .graphic img {
@@ -412,14 +412,14 @@ const graphics = [
   },
   {
     key: 'additions',
-    // Card boundaries derived from border detection of additions.png (trimmed; tagline removed).
+    // additions.png is now cropped to just the cards (header + tagline removed).
     // Columns: left 2.35–48.57% (w 46.22), right 50.78–96.79% (w 46.01)
-    // Rows: 1 [9.61–51.84] (h 42.23), 2 [55.73–97.77] (h 42.04)
+    // Rows: 1 [3.07–49.10] (h 46.03), 2 [53.33–99.15] (h 45.82)
     cards: [
-      { id: 11, name: "citizen's assembly", idea: "David",   tables: 6, people: 22, top: 9.61,  left: 2.35,  width: 46.22, height: 42.23 },
-      { id: 12, name: "ping pong game",     idea: "Sam",     tables: 1, people: 2,  top: 9.61,  left: 50.78, width: 46.01, height: 42.23 },
-      { id: 13, name: "reflection circle",  idea: "David",   tables: 0, people: 12, top: 55.73, left: 2.35,  width: 46.22, height: 42.04 },
-      { id: 14, name: "lunch 'n learn",     idea: "Nerissa", tables: 3, people: 10, top: 55.73, left: 50.78, width: 46.01, height: 42.04 }
+      { id: 11, name: "citizen's assembly", idea: "David",   tables: 6, people: 22, top: 3.07,  left: 2.35,  width: 46.22, height: 46.03 },
+      { id: 12, name: "ping pong game",     idea: "Sam",     tables: 1, people: 2,  top: 3.07,  left: 50.78, width: 46.01, height: 46.03 },
+      { id: 13, name: "reflection circle",  idea: "David",   tables: 0, people: 12, top: 53.33, left: 2.35,  width: 46.22, height: 45.82 },
+      { id: 14, name: "lunch 'n learn",     idea: "Nerissa", tables: 3, people: 10, top: 53.33, left: 50.78, width: 46.01, height: 45.82 }
     ]
   }
 ];
